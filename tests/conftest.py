@@ -21,6 +21,6 @@ def proj(tmp_path):
         for rel, content in files.items():
             f = root / rel
             f.parent.mkdir(parents=True, exist_ok=True)
-            f.write_text(content)
+            f.write_bytes(content.encode())
         return root
     return make
