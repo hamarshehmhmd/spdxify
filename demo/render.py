@@ -57,11 +57,10 @@ SCENES = [
     },
     {
         "kind": "term",
-        "cmds": ["ls", "spdxify verify --no-color 2>&1 | grep -E 'FAIL|OK|Error|deprecated' | sort -u | head -8"],
-        "show": ["ls", "spdxify verify"],
+        "cmds": ["ls", "spdxify verify"],
         "say": ("Here's a monorepo with six packages and the usual mistakes. spdxify verify builds each package's "
-                "metadata with the real setuptools 84 that's installed. One already fails, and the rest print "
-                "deprecation warnings."),
+                "metadata with the real setuptools 84 that's installed. One already fails, and the others print "
+                "deprecation warnings. The hatchling one gets built in C I instead."),
     },
     {
         "kind": "term",

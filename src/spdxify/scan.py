@@ -349,7 +349,7 @@ def check_pyproject(pr: Project) -> None:
     if table_file:
         pr.license_files = [table_file] if (root / table_file).is_file() else []
     elif isinstance(lic_files, list):
-        pr.license_files = list(lic_files)
+        pr.license_files = [x for x in lic_files if isinstance(x, str) and _license_globs_ok(x) and _glob(root, x)]
     else:
         pr.license_files = on_disk
     main_file = table_file if table_file and (root / table_file).is_file() else _primary_license_file(root, on_disk)
