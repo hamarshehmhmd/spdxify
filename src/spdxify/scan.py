@@ -21,6 +21,17 @@ from . import spdx
 
 SEVERITIES = ["info", "warn", "error"]
 
+
+def _read(path) -> str:
+    """Read text keeping the file's own line endings (CRLF stays CRLF on rewrite)."""
+    with open(path, encoding="utf-8", errors="replace", newline="") as fh:
+        return fh.read()
+
+
+def write_text(path, text: str) -> None:
+    with open(path, "w", encoding="utf-8", newline="") as fh:
+        fh.write(text)
+
 # First release of each build backend that understands PEP 639 `license = "<SPDX>"` + `license-files`.
 BACKEND_MIN = {
     "setuptools": "77.0.0",
@@ -260,7 +271,7 @@ def _choose(sources: list[L.Guess]) -> tuple[str | None, list[str], list[L.Guess
 
 def check_pyproject(pr: Project) -> None:
     path = pr.pyproject
-    text = path.read_text(encoding="utf-8")
+    text = _read(path)
     try:
         data = tomllib.loads(text)
     except tomllib.TOMLDecodeError as exc:
@@ -387,7 +398,7 @@ _CFG_KEY = re.compile(r"^(\s*)(license_files?|license_expression|license)\s*[=:]
 
 def check_setup_cfg(pr: Project) -> None:
     path = pr.setup_cfg
-    lines = path.read_text(encoding="utf-8").splitlines()
+    lines = _read(path).splitlines()
     rel = str(path)
     section = ""
     keys: dict[str, tuple[int, str]] = {}
@@ -453,7 +464,7 @@ def check_setup_cfg(pr: Project) -> None:
 
 
 def check_setup_py(pr: Project) -> None:
-    text = pr.setup_py.read_text(encoding="utf-8", errors="replace")
+    text = _read(pr.setup_py)
     hits = []
     for i, ln in enumerate(text.splitlines(), 1):
         if "License ::" in ln or re.search(r"\blicense_file\s*=", ln) or re.search(r"\blicense\s*=\s*['\"]", ln):

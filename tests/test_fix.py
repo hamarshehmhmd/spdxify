@@ -3,6 +3,8 @@ try:
 except ImportError:  # Python < 3.11
     import tomli as tomllib
 
+from pathlib import Path
+
 import pytest
 
 from spdxify.fix import Unresolved, _bump_requirement, plan
@@ -13,7 +15,8 @@ def fixed(root, override=None, **kw):
     out = {}
     for p in check([str(root)]):
         for ch in plan(p, override, **kw):
-            out[ch.path.split("/")[-2] + "/" + ch.path.split("/")[-1]] = ch
+            parts = Path(ch.path).parts
+            out[parts[-2] + "/" + parts[-1]] = ch
     return out
 
 
@@ -93,3 +96,14 @@ def test_idempotent(mono):
 ])
 def test_bump(req, expected):
     assert _bump_requirement(req, "setuptools") == expected
+
+
+def test_crlf_files_stay_crlf(proj):
+    root = proj({"LICENSE": "MIT"})
+    (root / "pyproject.toml").write_bytes(b'[project]\r\nname = "x"\r\nversion = "1"\r\nlicense = {text = "MIT"}\r\n')
+    (root / "setup.cfg").write_bytes(b"[metadata]\r\nlicense_file = LICENSE\r\n")
+    from spdxify.cli import main
+    assert main(["fix", str(root), "--write"]) == 0
+    py = (root / "pyproject.toml").read_bytes()
+    assert b'license = "MIT"\r\nlicense-files = ["LICENSE"]\r\n' in py and b"\n" not in py.replace(b"\r\n", b"")
+    assert (root / "setup.cfg").read_bytes() == b"[metadata]\r\nlicense_files = LICENSE\r\n"

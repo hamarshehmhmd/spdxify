@@ -10,7 +10,7 @@ from packaging.requirements import Requirement
 
 from . import licenses as L
 from . import spdx
-from .scan import BACKEND_MIN, Project, _spec_allows_min
+from .scan import BACKEND_MIN, Project, _read, _spec_allows_min
 
 
 @dataclass
@@ -69,7 +69,7 @@ def target_for(pr: Project, override: str | None) -> str:
 
 def fix_pyproject(pr: Project, override: str | None = None, bump_backend: bool = True) -> Change | None:
     path = pr.pyproject
-    before = path.read_text(encoding="utf-8")
+    before = _read(path)
     doc = tomlkit.parse(before)
     proj = doc.get("project")
     if proj is None:
@@ -144,6 +144,7 @@ def fix_pyproject(pr: Project, override: str | None = None, bump_backend: bool =
 
 def _insert_line(text: str, section: str, anchors: list[str], new_line: str) -> str:
     """Insert new_line after the first single-line `anchor = ...` key of [section] (else at section end)."""
+    nl = "\r\n" if "\r\n" in text else "\n"
     lines = text.splitlines(True)
     start = end = None
     for i, ln in enumerate(lines):
@@ -158,31 +159,32 @@ def _insert_line(text: str, section: str, anchors: list[str], new_line: str) -> 
     end = end if end is not None else len(lines)
     for anchor in anchors:
         for i in range(start + 1, end):
-            m = re.match(r"^\s*" + re.escape(anchor) + r"\s*=(.*)$", lines[i].rstrip("\n"))
+            m = re.match(r"^\s*" + re.escape(anchor) + r"\s*=(.*)$", lines[i].rstrip("\r\n"))
             if m:
                 val = m.group(1)
                 if ('"""' in val or "'''" in val) or val.count("[") != val.count("]") or val.count("{") != val.count("}"):
                     continue
                 indent = re.match(r"^\s*", lines[i]).group(0)
                 if not lines[i].endswith("\n"):
-                    lines[i] += "\n"
-                lines.insert(i + 1, indent + new_line + "\n")
+                    lines[i] += nl
+                lines.insert(i + 1, indent + new_line + nl)
                 return "".join(lines)
     j = end
     while j > start + 1 and not lines[j - 1].strip():
         j -= 1
     if j > 0 and not lines[j - 1].endswith("\n"):
-        lines[j - 1] += "\n"
-    lines.insert(j, new_line + "\n")
+        lines[j - 1] += nl
+    lines.insert(j, new_line + nl)
     return "".join(lines)
 
 
 def fix_setup_cfg(pr: Project, override: str | None = None) -> Change | None:
     path = pr.setup_cfg
-    before = path.read_text(encoding="utf-8")
+    before = _read(path)
     rules = {f.rule for f in pr.findings if f.path == str(path)}
     if not rules & {"SC001", "SC002", "SC003", "SC004"}:
         return None
+    nl = "\r\n" if "\r\n" in before else "\n"
     lines = before.splitlines(True)
     out: list[str] = []
     summary: list[str] = []
@@ -198,7 +200,7 @@ def fix_setup_cfg(pr: Project, override: str | None = None) -> Change | None:
         s = ln.strip()
         if s.startswith("[") and s.endswith("]"):
             if section == "metadata" and target and not wrote_expr:
-                out.append(f"license_expression = {target}\n")
+                out.append(f"license_expression = {target}{nl}")
                 wrote_expr = True
                 summary.append(f"license_expression = {target}")
             section, in_cls = s[1:-1].strip(), False
@@ -217,20 +219,20 @@ def fix_setup_cfg(pr: Project, override: str | None = None) -> Change | None:
                 in_cls = False
             m = re.match(r"^license_file(\s*[=:])(.*)$", ln)
             if m:
-                out.append(f"license_files{m.group(1)}{m.group(2)}\n")
+                out.append(f"license_files{m.group(1)}{m.group(2).rstrip(chr(13))}{nl}")
                 summary.append("license_file -> license_files")
                 continue
             m = re.match(r"^license\s*[=:]", ln)
             if m and target:
-                out.append(f"license_expression = {target}\n")
+                out.append(f"license_expression = {target}{nl}")
                 wrote_expr = True
                 summary.append(f"license = ... -> license_expression = {target}")
                 continue
         out.append(ln)
     if section == "metadata" and target and not wrote_expr:
         if out and not out[-1].endswith("\n"):
-            out[-1] += "\n"
-        out.append(f"license_expression = {target}\n")
+            out[-1] += nl
+        out.append(f"license_expression = {target}{nl}")
         summary.append(f"license_expression = {target}")
     after = "".join(out)
     if after == before:

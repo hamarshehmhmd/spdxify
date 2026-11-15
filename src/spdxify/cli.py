@@ -9,7 +9,7 @@ from pathlib import Path
 
 from . import __version__
 from .fix import Unresolved, plan
-from .scan import RULES, SEVERITIES, check
+from .scan import RULES, SEVERITIES, check, write_text
 from .verify import verify
 
 MANUAL = {"PL009", "SP001"}
@@ -105,7 +105,7 @@ def cmd_fix(args) -> int:
         for ch in changes:
             changed += 1
             if args.write:
-                Path(ch.path).write_text(ch.after, encoding="utf-8")
+                write_text(ch.path, ch.after)
                 print(c("ok", f"fixed {_rel(ch.path)}") + ": " + "; ".join(ch.summary))
             else:
                 for line in ch.diff().splitlines():

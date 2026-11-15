@@ -1,0 +1,17 @@
+# .github/workflows/license-metadata.yml
+name: license metadata
+on: [pull_request]
+jobs:
+  spdxify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: hamarshehmhmd/spdxify@v0.1.0
+        with:
+          fail-on: warn
+
+# .pre-commit-config.yaml
+# - repo: https://github.com/hamarshehmhmd/spdxify
+#   rev: v0.1.0
+#   hooks:
+#     - id: spdxify
