@@ -1,0 +1,12 @@
+[build-system]
+requires = ["hatchling>=1.18"]
+build-backend = "hatchling.build"
+
+[project]
+name = "acme-plugin"
+version = "0.3.0"
+license = "MIT License"
+license-files = ["LICENSE", "COPYING*"]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/plugin"]

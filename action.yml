@@ -1,0 +1,23 @@
+name: "spdxify"
+description: "Check Python packaging license metadata for PEP 639 problems (license tables, License classifiers, bad SPDX, old backends)."
+author: "Mohammad Hamarsheh"
+branding:
+  icon: "file-text"
+  color: "blue"
+inputs:
+  paths:
+    description: "Space-separated paths to scan"
+    default: "."
+  fail-on:
+    description: "info | warn | error | never"
+    default: "warn"
+  version:
+    description: "git ref of spdxify to install"
+    default: "v0.1.0"
+runs:
+  using: "composite"
+  steps:
+    - shell: bash
+      run: python3 -m pip install --quiet "git+https://github.com/hamarshehmhmd/spdxify@${{ inputs.version }}"
+    - shell: bash
+      run: python3 -m spdxify check ${{ inputs.paths }} --format github --fail-on ${{ inputs.fail-on }}

@@ -1,0 +1,6 @@
+- id: spdxify
+  name: spdxify (PEP 639 license metadata)
+  entry: spdxify check --fail-on warn
+  language: python
+  files: (^|/)(pyproject\.toml|setup\.cfg|setup\.py)$
+  pass_filenames: false

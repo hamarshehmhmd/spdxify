@@ -1,0 +1,44 @@
+[build-system]
+requires = ["setuptools>=77"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "spdxify"
+version = "0.1.0"
+description = "Migrate Python packaging license metadata to PEP 639 SPDX expressions before setuptools drops license tables and License classifiers (2027-02-18). Check, fix, verify."
+readme = "README.md"
+requires-python = ">=3.9"
+license = "AGPL-3.0-or-later"
+license-files = ["LICENSE"]
+authors = [{ name = "Mohammad Hamarsheh" }]
+keywords = ["pep639", "spdx", "license", "pyproject", "setuptools", "packaging", "hatchling", "pre-commit"]
+classifiers = [
+  "Programming Language :: Python :: 3",
+  "Environment :: Console",
+  "Operating System :: OS Independent",
+  "Topic :: Software Development :: Build Tools",
+  "Topic :: System :: Software Distribution",
+  "Intended Audience :: Developers",
+]
+dependencies = [
+  "packaging>=24.2",
+  "tomlkit>=0.12",
+  "tomli>=1.1; python_version < '3.11'",
+  "setuptools>=77",
+]
+
+[project.optional-dependencies]
+test = ["pytest>=7"]
+
+[project.urls]
+Homepage = "https://github.com/hamarshehmhmd/spdxify"
+Issues = "https://github.com/hamarshehmhmd/spdxify/issues"
+
+[project.scripts]
+spdxify = "spdxify.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
