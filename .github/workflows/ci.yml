@@ -53,3 +53,11 @@ jobs:
           done
           ls /tmp/dist
           unzip -p /tmp/dist/acme_core-*.whl '*/METADATA' | grep -E "^License-(Expression|File)"
+  action:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: ./
+        with:
+          paths: pyproject.toml
+          fail-on: info
